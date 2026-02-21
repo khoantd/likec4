@@ -22,6 +22,7 @@
     "lint:fix": "oxlint --type-aware --fix-suggestions",
     "build": "turbo run build  --filter=\"!./apps/*\"",
     "build:all": "turbo run build",
+    "build:playground": "pnpm generate && pnpm turbo run build --filter=@likec4/playground...",
     "typecheck": "turbo run typecheck  --filter=\"!./apps/*\"",
     "typecheck:all": "turbo run typecheck",
     "lint:package": "turbo run lint:package --filter=\"!./apps/*\"",
