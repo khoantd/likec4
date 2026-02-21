@@ -17,6 +17,7 @@ import {
 } from '@tanstack/react-router'
 import { memo, useCallback } from 'react'
 import { useCurrentProject, useCurrentViewId } from '../../hooks'
+import { AgentToggle } from '../agent/AgentToggle'
 import { ColorSchemeToggle } from '../ColorSchemeToggle'
 import { NavigationPanel } from './NavigationPanel'
 import { SelectProject } from './SelectProject'
@@ -67,6 +68,7 @@ export const Header = memo(() => {
             )}
 
           <Divider orientation="vertical" visibleFrom="md" />
+          <AgentToggle />
           <ColorSchemeToggle />
         </NavigationPanel.Body>
       </NavigationPanel.Root>

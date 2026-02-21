@@ -1,0 +1,1248 @@
+{
+  _type: 'deployment',
+  tags: null,
+  links: null,
+  _stage: 'layouted',
+  sourcePath: 'deployment.c4',
+  description: null,
+  title: 'Deployment / Production',
+  id: 'production',
+  autoLayout: {
+    direction: 'TB',
+    nodeSep: 100,
+    rankSep: 100,
+  },
+  notation: {
+    nodes: [
+      {
+        title: 'Environment',
+        shape: 'rectangle',
+        color: 'gray',
+        kinds: [
+          'environment',
+        ],
+      },
+    ],
+  },
+  hash: '8zI6E0ENyHhNFZb01qJF7a4Vbv0C7lYs6AR3Z-g9AgY',
+  bounds: {
+    x: -30,
+    y: -20,
+    width: 2006,
+    height: 1713,
+  },
+  nodes: [
+    {
+      id: 'customer.customer',
+      parent: null,
+      level: 0,
+      children: [],
+      inEdges: [],
+      outEdges: [
+        'ip12z8',
+        '3l2uvr',
+      ],
+      kind: 'instance',
+      title: 'Cloud Customer',
+      description: {
+        txt: 'The regular customer of the system',
+      },
+      tags: [],
+      color: 'secondary',
+      shape: 'person',
+      style: {
+        opacity: 5,
+        size: 'md',
+      },
+      deploymentRef: 'customer.customer',
+      modelRef: 'customer',
+      navigateTo: 'customer',
+      x: 820,
+      y: 0,
+      width: 320,
+      height: 180,
+      labelBBox: {
+        x: 40,
+        y: 63,
+        width: 240,
+        height: 48,
+      },
+    },
+    {
+      id: 'prod',
+      parent: null,
+      level: 0,
+      children: [
+        'prod.eu.zone1',
+      ],
+      inEdges: [
+        'ip12z8',
+        '3l2uvr',
+      ],
+      outEdges: [],
+      deploymentRef: 'prod',
+      title: 'Production environment',
+      kind: 'environment',
+      technology: 'OpenTofu',
+      notation: 'Environment',
+      color: 'gray',
+      shape: 'rectangle',
+      tags: [],
+      style: {
+        opacity: 5,
+        size: 'md',
+      },
+      depth: 3,
+      x: -10,
+      y: 254,
+      width: 1966,
+      height: 1419,
+      labelBBox: {
+        x: 6,
+        y: 0,
+        width: 162,
+        height: 15,
+      },
+    },
+    {
+      id: 'prod.eu.zone1',
+      parent: 'prod',
+      level: 1,
+      children: [
+        'prod.eu.zone1.server3',
+        'prod.eu.zone1.server1',
+        'prod.eu.zone1.server2',
+        'prod.eu.zone1.amazon.sqs',
+        'prod.eu.zone1.amazon.rds',
+      ],
+      inEdges: [
+        'ip12z8',
+        '3l2uvr',
+      ],
+      outEdges: [],
+      deploymentRef: 'prod.eu.zone1',
+      title: 'zone1',
+      kind: 'zone',
+      color: 'muted',
+      shape: 'rectangle',
+      tags: [],
+      style: {
+        opacity: 5,
+        size: 'md',
+      },
+      depth: 2,
+      x: 32,
+      y: 314,
+      width: 1882,
+      height: 1317,
+      labelBBox: {
+        x: 6,
+        y: 0,
+        width: 41,
+        height: 15,
+      },
+    },
+    {
+      id: 'prod.eu.zone1.server3',
+      parent: 'prod.eu.zone1',
+      level: 2,
+      children: [
+        'prod.eu.zone1.server3.data',
+        'prod.eu.zone1.server3.cms',
+      ],
+      inEdges: [
+        '1tsm15e',
+        '16x4hqp',
+      ],
+      outEdges: [
+        '16dt28v',
+        'mjmeho',
+        '15x0e3o',
+        'c38vx',
+      ],
+      deploymentRef: 'prod.eu.zone1.server3',
+      title: 'server3',
+      kind: 'node',
+      color: 'indigo',
+      shape: 'rectangle',
+      tags: [],
+      style: {
+        opacity: 5,
+        size: 'md',
+      },
+      depth: 1,
+      x: 948,
+      y: 385,
+      width: 420,
+      height: 935,
+      labelBBox: {
+        x: 6,
+        y: 0,
+        width: 55,
+        height: 15,
+      },
+    },
+    {
+      id: 'prod.eu.zone1.server3.data',
+      parent: 'prod.eu.zone1.server3',
+      level: 3,
+      children: [],
+      inEdges: [],
+      outEdges: [
+        '16dt28v',
+        'mjmeho',
+        'c38vx',
+      ],
+      kind: 'instance',
+      title: 'Data Services',
+      description: {
+        txt: 'Data storage\nand data processing',
+      },
+      tags: [
+        'next',
+        'v2',
+      ],
+      icon: 'file://./images/data-services.svg',
+      color: 'indigo',
+      shape: 'rectangle',
+      style: {
+        opacity: 25,
+        size: 'md',
+      },
+      deploymentRef: 'prod.eu.zone1.server3.data',
+      modelRef: 'cloud.data',
+      navigateTo: 'cloud_data',
+      x: 998,
+      y: 456,
+      width: 320,
+      height: 180,
+      labelBBox: {
+        x: 77,
+        y: 54,
+        width: 197,
+        height: 66,
+      },
+    },
+    {
+      id: 'prod.eu.zone1.server1',
+      parent: 'prod.eu.zone1',
+      level: 2,
+      children: [
+        'prod.eu.zone1.server1.dashboard',
+        'prod.eu.zone1.server1.graphql',
+      ],
+      inEdges: [
+        'ip12z8',
+        '16dt28v',
+      ],
+      outEdges: [
+        '1tsm15e',
+        '1hhn8ru',
+      ],
+      deploymentRef: 'prod.eu.zone1.server1',
+      title: 'server1',
+      kind: 'node',
+      color: 'green',
+      shape: 'rectangle',
+      tags: [],
+      style: {
+        opacity: 5,
+        size: 'md',
+      },
+      depth: 1,
+      x: 82,
+      y: 385,
+      width: 446,
+      height: 625,
+      labelBBox: {
+        x: 6,
+        y: 0,
+        width: 55,
+        height: 15,
+      },
+    },
+    {
+      id: 'prod.eu.zone1.server2',
+      parent: 'prod.eu.zone1',
+      level: 2,
+      children: [
+        'prod.eu.zone1.server2.dashboard',
+        'prod.eu.zone1.server2.graphql',
+      ],
+      inEdges: [
+        '3l2uvr',
+        'mjmeho',
+      ],
+      outEdges: [
+        '16x4hqp',
+        '1qgpy6h',
+      ],
+      deploymentRef: 'prod.eu.zone1.server2',
+      title: 'server2',
+      kind: 'node',
+      color: 'green',
+      shape: 'rectangle',
+      tags: [],
+      style: {
+        opacity: 5,
+        size: 'md',
+      },
+      depth: 1,
+      x: 1418,
+      y: 385,
+      width: 446,
+      height: 625,
+      labelBBox: {
+        x: 6,
+        y: 0,
+        width: 55,
+        height: 15,
+      },
+    },
+    {
+      id: 'prod.eu.zone1.amazon.sqs',
+      parent: 'prod.eu.zone1',
+      level: 2,
+      children: [],
+      inEdges: [
+        'c38vx',
+      ],
+      outEdges: [],
+      kind: 'instance',
+      title: 'SQS',
+      description: {
+        txt: 'Message queues',
+      },
+      tags: [],
+      icon: 'https://icon.icepanel.io/AWS/svg/App-Integration/Simple-Queue-Service.svg',
+      color: 'amber',
+      shape: 'queue',
+      style: {
+        opacity: 5,
+        size: 'md',
+        multiple: true,
+      },
+      deploymentRef: 'prod.eu.zone1.amazon.sqs',
+      modelRef: 'amazon.sqs',
+      navigateTo: 'amazon_sqs',
+      x: 578,
+      y: 784,
+      width: 320,
+      height: 172,
+      labelBBox: {
+        x: 87,
+        y: 59,
+        width: 186,
+        height: 47,
+      },
+    },
+    {
+      id: 'prod.eu.zone1.server1.dashboard',
+      parent: 'prod.eu.zone1.server1',
+      level: 3,
+      children: [],
+      inEdges: [
+        'ip12z8',
+      ],
+      outEdges: [
+        '1mnx295',
+      ],
+      kind: 'instance',
+      title: 'Customer Dashboard',
+      description: {
+        txt: 'Web application, that allows customers to interact with the cloud system',
+      },
+      technology: 'Nextjs',
+      tags: [],
+      icon: 'https://icon.icepanel.io/Technology/png-shadow-512/Next.js.png',
+      color: 'green',
+      shape: 'browser',
+      style: {
+        opacity: 5,
+        size: 'md',
+      },
+      deploymentRef: 'prod.eu.zone1.server1.dashboard',
+      modelRef: 'cloud.ui.dashboard',
+      x: 145,
+      y: 456,
+      width: 320,
+      height: 180,
+      labelBBox: {
+        x: 47,
+        y: 36,
+        width: 257,
+        height: 103,
+      },
+    },
+    {
+      id: 'prod.eu.zone1.server2.dashboard',
+      parent: 'prod.eu.zone1.server2',
+      level: 3,
+      children: [],
+      inEdges: [
+        '3l2uvr',
+      ],
+      outEdges: [
+        '13rym21',
+      ],
+      kind: 'instance',
+      title: 'Customer Dashboard',
+      description: {
+        txt: 'Web application, that allows customers to interact with the cloud system',
+      },
+      technology: 'Nextjs',
+      tags: [],
+      icon: 'https://icon.icepanel.io/Technology/png-shadow-512/Next.js.png',
+      color: 'green',
+      shape: 'browser',
+      style: {
+        opacity: 5,
+        size: 'md',
+      },
+      deploymentRef: 'prod.eu.zone1.server2.dashboard',
+      modelRef: 'cloud.ui.dashboard',
+      x: 1481,
+      y: 456,
+      width: 320,
+      height: 180,
+      labelBBox: {
+        x: 47,
+        y: 36,
+        width: 257,
+        height: 103,
+      },
+    },
+    {
+      id: 'prod.eu.zone1.server1.graphql',
+      parent: 'prod.eu.zone1.server1',
+      level: 3,
+      children: [],
+      inEdges: [
+        '1mnx295',
+        '16dt28v',
+      ],
+      outEdges: [
+        '1tsm15e',
+        '1hhn8ru',
+      ],
+      kind: 'instance',
+      title: 'GraphQL',
+      description: {
+        txt: 'The GraphQL API to access data',
+      },
+      technology: 'nodejs',
+      tags: [
+        'v2',
+        'next',
+      ],
+      icon: 'tech:graphql',
+      color: 'green',
+      shape: 'rectangle',
+      style: {
+        opacity: 5,
+        size: 'md',
+      },
+      deploymentRef: 'prod.eu.zone1.server1.graphql',
+      modelRef: 'cloud.backend.graphql',
+      x: 132,
+      y: 780,
+      width: 345,
+      height: 180,
+      labelBBox: {
+        x: 47,
+        y: 53,
+        width: 283,
+        height: 67,
+      },
+    },
+    {
+      id: 'prod.eu.zone1.server2.graphql',
+      parent: 'prod.eu.zone1.server2',
+      level: 3,
+      children: [],
+      inEdges: [
+        '13rym21',
+        'mjmeho',
+      ],
+      outEdges: [
+        '16x4hqp',
+        '1qgpy6h',
+      ],
+      kind: 'instance',
+      title: 'GraphQL',
+      description: {
+        txt: 'The GraphQL API to access data',
+      },
+      technology: 'nodejs',
+      tags: [
+        'v2',
+        'next',
+      ],
+      icon: 'tech:graphql',
+      color: 'green',
+      shape: 'rectangle',
+      style: {
+        opacity: 5,
+        size: 'md',
+      },
+      deploymentRef: 'prod.eu.zone1.server2.graphql',
+      modelRef: 'cloud.backend.graphql',
+      x: 1468,
+      y: 780,
+      width: 345,
+      height: 180,
+      labelBBox: {
+        x: 47,
+        y: 53,
+        width: 283,
+        height: 67,
+      },
+    },
+    {
+      id: 'prod.eu.zone1.server3.cms',
+      parent: 'prod.eu.zone1.server3',
+      level: 3,
+      children: [],
+      inEdges: [
+        '1tsm15e',
+        '16x4hqp',
+      ],
+      outEdges: [
+        '15x0e3o',
+      ],
+      kind: 'instance',
+      title: 'CMS',
+      description: {
+        txt: 'The CMS of the cloud system',
+      },
+      tags: [
+        'v1',
+        'deprecated',
+      ],
+      color: 'indigo',
+      shape: 'rectangle',
+      style: {
+        opacity: 5,
+        size: 'md',
+      },
+      deploymentRef: 'prod.eu.zone1.server3.cms',
+      modelRef: 'cloud.backend.cms',
+      x: 998,
+      y: 1090,
+      width: 320,
+      height: 180,
+      labelBBox: {
+        x: 60,
+        y: 63,
+        width: 201,
+        height: 48,
+      },
+    },
+    {
+      id: 'prod.eu.zone1.amazon.rds',
+      parent: 'prod.eu.zone1',
+      level: 2,
+      children: [],
+      inEdges: [
+        '1hhn8ru',
+        '1qgpy6h',
+        '15x0e3o',
+      ],
+      outEdges: [],
+      kind: 'instance',
+      title: 'RDS',
+      description: {
+        txt: 'Relational Databases',
+      },
+      tags: [
+        'storage',
+        'team-one',
+        'next',
+      ],
+      color: 'amber',
+      shape: 'cylinder',
+      style: {
+        opacity: 25,
+        size: 'md',
+      },
+      deploymentRef: 'prod.eu.zone1.amazon.rds',
+      modelRef: 'amazon.rds',
+      navigateTo: 'amazon_rds',
+      x: 998,
+      y: 1401,
+      width: 320,
+      height: 180,
+      labelBBox: {
+        x: 87,
+        y: 63,
+        width: 147,
+        height: 48,
+      },
+    },
+  ],
+  edges: [
+    {
+      id: 'ip12z8',
+      source: 'customer.customer',
+      target: 'prod.eu.zone1.server1.dashboard',
+      label: 'open in browser',
+      points: [
+        [
+          849,
+          180,
+        ],
+        [
+          735,
+          258,
+        ],
+        [
+          569,
+          371,
+        ],
+        [
+          452,
+          451,
+        ],
+      ],
+      labelBBox: {
+        x: 772,
+        y: 230,
+        width: 104,
+        height: 18,
+      },
+      parent: null,
+      relations: [
+        '1rocpll',
+      ],
+      color: 'gray',
+      line: 'dashed',
+      head: 'open',
+      controlPoints: [
+        {
+          x: 635,
+          y: 322,
+        },
+      ],
+    },
+    {
+      id: '3l2uvr',
+      source: 'customer.customer',
+      target: 'prod.eu.zone1.server2.dashboard',
+      label: 'open in browser',
+      points: [
+        [
+          1140,
+          136,
+        ],
+        [
+          1223,
+          164,
+        ],
+        [
+          1322,
+          205,
+        ],
+        [
+          1401,
+          261,
+        ],
+        [
+          1473,
+          312,
+        ],
+        [
+          1538,
+          388,
+        ],
+        [
+          1583,
+          449,
+        ],
+      ],
+      labelBBox: {
+        x: 1377,
+        y: 230,
+        width: 104,
+        height: 18,
+      },
+      parent: null,
+      relations: [
+        '1rocpll',
+      ],
+      color: 'gray',
+      line: 'dashed',
+      head: 'open',
+      controlPoints: [
+        {
+          x: 1269,
+          y: 188,
+        },
+        {
+          x: 1496,
+          y: 351,
+        },
+      ],
+    },
+    {
+      id: '1mnx295',
+      source: 'prod.eu.zone1.server1.dashboard',
+      target: 'prod.eu.zone1.server1.graphql',
+      label: 'fetch data',
+      description: {
+        md: '[Apollo client](https://www.apollographql.com/docs/react/) fetches data from the backend',
+      },
+      points: [
+        [
+          305,
+          636,
+        ],
+        [
+          305,
+          678,
+        ],
+        [
+          305,
+          727,
+        ],
+        [
+          305,
+          770,
+        ],
+      ],
+      labelBBox: {
+        x: 306,
+        y: 686,
+        width: 65,
+        height: 39,
+      },
+      parent: 'prod.eu.zone1.server1',
+      relations: [
+        '1fih438',
+      ],
+      color: 'gray',
+      line: 'dashed',
+      head: 'open',
+      technology: 'graphql',
+      tags: [
+        'v1',
+        'v2',
+      ],
+      controlPoints: [
+        {
+          x: 305,
+          y: 702,
+        },
+      ],
+    },
+    {
+      id: '13rym21',
+      source: 'prod.eu.zone1.server2.dashboard',
+      target: 'prod.eu.zone1.server2.graphql',
+      label: 'fetch data',
+      description: {
+        md: '[Apollo client](https://www.apollographql.com/docs/react/) fetches data from the backend',
+      },
+      points: [
+        [
+          1641,
+          636,
+        ],
+        [
+          1641,
+          678,
+        ],
+        [
+          1641,
+          727,
+        ],
+        [
+          1641,
+          770,
+        ],
+      ],
+      labelBBox: {
+        x: 1642,
+        y: 686,
+        width: 65,
+        height: 39,
+      },
+      parent: 'prod.eu.zone1.server2',
+      relations: [
+        '1fih438',
+      ],
+      color: 'gray',
+      line: 'dashed',
+      head: 'open',
+      technology: 'graphql',
+      tags: [
+        'v1',
+        'v2',
+      ],
+      controlPoints: [
+        {
+          x: 1641,
+          y: 702,
+        },
+      ],
+    },
+    {
+      id: '1tsm15e',
+      source: 'prod.eu.zone1.server1.graphql',
+      target: 'prod.eu.zone1.server3.cms',
+      label: 'read and write',
+      points: [
+        [
+          396,
+          960,
+        ],
+        [
+          422,
+          980,
+        ],
+        [
+          451,
+          998,
+        ],
+        [
+          482,
+          1010,
+        ],
+        [
+          505,
+          1018,
+        ],
+        [
+          675,
+          1014,
+        ],
+        [
+          699,
+          1018,
+        ],
+        [
+          830,
+          1036,
+        ],
+        [
+          866,
+          1041,
+        ],
+        [
+          989,
+          1089,
+        ],
+      ],
+      labelBBox: {
+        x: 835,
+        y: 1017,
+        width: 93,
+        height: 18,
+      },
+      parent: 'prod.eu.zone1',
+      relations: [
+        'grl8uv',
+      ],
+      color: 'gray',
+      line: 'dashed',
+      head: 'open',
+      controlPoints: [
+        {
+          x: 437,
+          y: 988,
+        },
+        {
+          x: 615,
+          y: 1015,
+        },
+        {
+          x: 847,
+          y: 1042,
+        },
+      ],
+    },
+    {
+      id: '1hhn8ru',
+      source: 'prod.eu.zone1.server1.graphql',
+      target: 'prod.eu.zone1.amazon.rds',
+      label: 'read and write',
+      points: [
+        [
+          395,
+          959,
+        ],
+        [
+          495,
+          1056,
+        ],
+        [
+          665,
+          1210,
+        ],
+        [
+          828,
+          1320,
+        ],
+        [
+          878,
+          1354,
+        ],
+        [
+          936,
+          1386,
+        ],
+        [
+          989,
+          1413,
+        ],
+      ],
+      labelBBox: {
+        x: 829,
+        y: 1169,
+        width: 93,
+        height: 18,
+      },
+      parent: 'prod.eu.zone1',
+      relations: [
+        'x0imfx',
+      ],
+      color: 'gray',
+      line: 'dashed',
+      head: 'open',
+      controlPoints: [
+        {
+          x: 587,
+          y: 1134,
+        },
+        {
+          x: 907,
+          y: 1369,
+        },
+      ],
+    },
+    {
+      id: '16dt28v',
+      source: 'prod.eu.zone1.server3.data',
+      target: 'prod.eu.zone1.server1.graphql',
+      label: 'read tenants',
+      points: [
+        [
+          998,
+          565,
+        ],
+        [
+          815,
+          587,
+        ],
+        [
+          530,
+          629,
+        ],
+        [
+          439,
+          686,
+        ],
+        [
+          421,
+          698,
+        ],
+        [
+          393,
+          735,
+        ],
+        [
+          367,
+          772,
+        ],
+      ],
+      labelBBox: {
+        x: 440,
+        y: 696,
+        width: 82,
+        height: 18,
+      },
+      parent: 'prod.eu.zone1',
+      relations: [
+        '7hils9',
+      ],
+      color: 'gray',
+      line: 'dashed',
+      head: 'open',
+      controlPoints: [
+        {
+          x: 684,
+          y: 612,
+        },
+        {
+          x: 406,
+          y: 719,
+        },
+      ],
+    },
+    {
+      id: '16x4hqp',
+      source: 'prod.eu.zone1.server2.graphql',
+      target: 'prod.eu.zone1.server3.cms',
+      label: 'read and write',
+      points: [
+        [
+          1534,
+          959,
+        ],
+        [
+          1511,
+          977,
+        ],
+        [
+          1487,
+          994,
+        ],
+        [
+          1464,
+          1010,
+        ],
+        [
+          1450,
+          1019,
+        ],
+        [
+          1390,
+          1053,
+        ],
+        [
+          1327,
+          1087,
+        ],
+      ],
+      labelBBox: {
+        x: 1449,
+        y: 1017,
+        width: 93,
+        height: 18,
+      },
+      parent: 'prod.eu.zone1',
+      relations: [
+        'grl8uv',
+      ],
+      color: 'gray',
+      line: 'dashed',
+      head: 'open',
+      controlPoints: [
+        {
+          x: 1499,
+          y: 985,
+        },
+        {
+          x: 1413,
+          y: 1039,
+        },
+      ],
+    },
+    {
+      id: '1qgpy6h',
+      source: 'prod.eu.zone1.server2.graphql',
+      target: 'prod.eu.zone1.amazon.rds',
+      label: 'read and write',
+      points: [
+        [
+          1610,
+          959,
+        ],
+        [
+          1599,
+          986,
+        ],
+        [
+          1587,
+          1015,
+        ],
+        [
+          1574,
+          1040,
+        ],
+        [
+          1506,
+          1172,
+        ],
+        [
+          1495,
+          1213,
+        ],
+        [
+          1393,
+          1320,
+        ],
+        [
+          1366,
+          1349,
+        ],
+        [
+          1333,
+          1376,
+        ],
+        [
+          1301,
+          1400,
+        ],
+      ],
+      labelBBox: {
+        x: 1549,
+        y: 1169,
+        width: 93,
+        height: 18,
+      },
+      parent: 'prod.eu.zone1',
+      relations: [
+        'x0imfx',
+      ],
+      color: 'gray',
+      line: 'dashed',
+      head: 'open',
+      controlPoints: [
+        {
+          x: 1592,
+          y: 1000,
+        },
+        {
+          x: 1544,
+          y: 1098,
+        },
+        {
+          x: 1348,
+          y: 1361,
+        },
+      ],
+    },
+    {
+      id: 'mjmeho',
+      source: 'prod.eu.zone1.server3.data',
+      target: 'prod.eu.zone1.server2.graphql',
+      label: 'read tenants',
+      points: [
+        [
+          1292,
+          636,
+        ],
+        [
+          1356,
+          679,
+        ],
+        [
+          1434,
+          731,
+        ],
+        [
+          1500,
+          775,
+        ],
+      ],
+      labelBBox: {
+        x: 1429,
+        y: 696,
+        width: 82,
+        height: 18,
+      },
+      parent: 'prod.eu.zone1',
+      relations: [
+        '7hils9',
+      ],
+      color: 'gray',
+      line: 'dashed',
+      head: 'open',
+      controlPoints: [
+        {
+          x: 1395,
+          y: 705,
+        },
+      ],
+    },
+    {
+      id: '15x0e3o',
+      source: 'prod.eu.zone1.server3.cms',
+      target: 'prod.eu.zone1.amazon.rds',
+      label: 'store media',
+      points: [
+        [
+          1158,
+          1270,
+        ],
+        [
+          1158,
+          1308,
+        ],
+        [
+          1158,
+          1352,
+        ],
+        [
+          1158,
+          1391,
+        ],
+      ],
+      labelBBox: {
+        x: 1159,
+        y: 1328,
+        width: 77,
+        height: 18,
+      },
+      parent: 'prod.eu.zone1',
+      relations: [
+        '17828fy',
+      ],
+      color: 'gray',
+      line: 'dashed',
+      head: 'open',
+      controlPoints: [
+        {
+          x: 1158,
+          y: 1330,
+        },
+      ],
+    },
+    {
+      id: 'c38vx',
+      source: 'prod.eu.zone1.server3.data',
+      target: 'prod.eu.zone1.amazon.sqs',
+      label: 'pull and process hits data',
+      points: [
+        [
+          1042,
+          636,
+        ],
+        [
+          984,
+          680,
+        ],
+        [
+          915,
+          733,
+        ],
+        [
+          857,
+          778,
+        ],
+      ],
+      labelBBox: {
+        x: 974,
+        y: 696,
+        width: 163,
+        height: 18,
+      },
+      parent: 'prod.eu.zone1',
+      relations: [
+        '3txfkd',
+      ],
+      color: 'gray',
+      line: 'dotted',
+      head: 'open',
+      kind: 'pull',
+      tail: 'onormal',
+      controlPoints: [
+        {
+          x: 949,
+          y: 706,
+        },
+      ],
+    },
+  ],
+  _layout: 'manual',
+}

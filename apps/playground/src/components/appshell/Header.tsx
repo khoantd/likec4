@@ -1,9 +1,6 @@
 import { useWorkspaceIdFromRoute } from '$hooks/useWorkspaceIdFromRoute'
-import {
-  Anchor,
-  Button,
-  Group,
-} from '@mantine/core'
+import { Anchor, Button, Group } from '@mantine/core'
+import { AgentToggle } from '../agent/AgentToggle'
 import { ColorSchemeToggle } from '../ColorSchemeToggle'
 import { Logo } from '../Logo'
 import { PlaygroundsMenu } from './PlaygroundsMenu'
@@ -20,11 +17,13 @@ export function Header() {
           <Logo
             style={{
               height: 22,
-            }} />
+            }}
+          />
         </Anchor>
         {workspaceId && <PlaygroundTitle />}
       </Group>
       <Group h="100%" gap={'xs'}>
+        {workspaceId && <AgentToggle />}
         {workspaceId && <ShareButton />}
         <PlaygroundsMenu />
         <Button

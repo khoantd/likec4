@@ -129,6 +129,10 @@ export default defineConfig(({ command }) => ({
       },
     },
   },
+  define: {
+    AGENT_ENABLED: process.env['VITE_LIKEC4_AGENT_URL'] ? 'true' : 'false',
+    AGENT_URL: process.env['VITE_LIKEC4_AGENT_URL'] ? JSON.stringify(process.env['VITE_LIKEC4_AGENT_URL']) : '""',
+  },
   plugins: [
     tsconfigpaths({
       projects: [

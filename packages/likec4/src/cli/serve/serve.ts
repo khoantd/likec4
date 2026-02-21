@@ -1,3 +1,4 @@
+import { AgentServer, DEFAULT_AGENT_PORT } from '@likec4/language-server/agent'
 import { fromWorkspace } from '@likec4/language-services/node/without-mcp'
 import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -63,6 +64,16 @@ export async function handler({
   listen,
   port,
 }: HandlerParams) {
+  // Load .env file: try workspace dir first, then cwd as fallback
+  for (const candidate of [join(path, '.env'), join(process.cwd(), '.env')]) {
+    try {
+      process.loadEnvFile(candidate)
+      break
+    } catch {
+      // .env file is optional
+    }
+  }
+
   // Explicitly set NODE_ENV to development
   if (enableHMR) {
     process.env['NODE_ENV'] = 'development'
@@ -73,8 +84,28 @@ export async function handler({
     watch: enableHMR,
   })
   const likec4AssetsDir = await mkdtemp(join(tmpdir(), '.likec4-assets-'))
-  // const likec4AssetsDir = join(languageServices.workspace, '.likec4-assets')
-  // await mkdir(likec4AssetsDir, { recursive: true })
+
+  // Start AI Agent server if configured via environment variables
+  const agentUrl = process.env['LIKEC4_AGENT_URL']
+  let agentPort: number | undefined
+
+  if (agentUrl) {
+    const agentApiKey = process.env['LIKEC4_AGENT_KEY']
+    const agentModel = process.env['LIKEC4_AGENT_MODEL'] || 'gpt-4o'
+    agentPort = process.env['LIKEC4_AGENT_PORT']
+      ? parseInt(process.env['LIKEC4_AGENT_PORT'], 10)
+      : DEFAULT_AGENT_PORT
+
+    const agentServer = new AgentServer(
+      {
+        url: agentUrl,
+        apiKey: agentApiKey,
+        model: agentModel,
+      },
+      languageServices.languageServices,
+    )
+    await agentServer.start(agentPort)
+  }
 
   const server = await viteDev({
     buildWebcomponent: enableWebcomponent,
@@ -87,44 +118,9 @@ export async function handler({
     likec4AssetsDir,
     listen,
     port,
+    agentPort,
   })
 
   server.config.logger.clearScreen('info')
   printServerUrls(server)
-
-  // if (!useOverview) {
-  //   return
-  // }
-  // const views = await languageServices.diagrams()
-
-  // if (hasAtLeast(views, 1)) {
-  //   const logger = createLikeC4Logger('c4:export')
-  //   const serverUrl = resolveServerUrl(server)
-  //   if (!serverUrl) {
-  //     logger.error('no preview server url')
-  //     return
-  //   }
-  //   logger.info(k.cyan(`wait 5sec before generating previews`))
-  //   await delay(5000)
-
-  //   try {
-  //     await exportViewsToPNG({
-  //       serverUrl,
-  //       logger,
-  //       views,
-  //       theme: 'light',
-  //       output: likec4AssetsDir,
-  //       outputType: 'flat',
-  //     })
-
-  //     await delay(1000)
-
-  //     logger.info(k.yellow(`Note: changes in sources do not trigger preview updates, restart is required`))
-  //   } catch (error) {
-  //     logger.error(k.red('Failed to generate previews'))
-  //     logger.error(error)
-  //   }
-  // } else {
-  //   server.config.logger.warn('no views found, no previews generated')
-  // }
 }

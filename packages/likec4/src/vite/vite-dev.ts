@@ -20,6 +20,8 @@ type Config = SetOptional<LikeC4ViteConfig, 'likec4AssetsDir'> & {
   hmr?: boolean
   listen?: string | undefined
   port?: number | undefined
+  /** Port of the AI Agent server. Enables /agent/* proxy when set. */
+  agentPort?: number | undefined
 }
 
 export async function viteDev({
@@ -32,6 +34,7 @@ export async function viteDev({
   openBrowser,
   listen,
   port,
+  agentPort,
   ...cfg
 }: Config): Promise<ViteDevServer> {
   likec4AssetsDir ??= await mkdtemp(join(tmpdir(), '.likec4-assets-'))
@@ -83,8 +86,14 @@ export async function viteDev({
       ? {
         ...config.define,
         'process.env.NODE_ENV': '"development"',
+        AGENT_URL: agentPort ? '"/agent"' : '""',
+        AGENT_ENABLED: agentPort ? 'true' : 'false',
       }
-      : config.define,
+      : {
+        ...config.define,
+        AGENT_URL: '""',
+        AGENT_ENABLED: 'false',
+      },
     mode: hmr ? 'development' : config.mode,
     publicDir,
     server: {
@@ -102,8 +111,16 @@ export async function viteDev({
       },
       fs: {
         strict: false,
-      },
+      } as const,
       open: openBrowser ?? (!isDev && !isInsideContainer()),
+      ...(agentPort && {
+        proxy: {
+          '/agent': {
+            target: `http://localhost:${agentPort}`,
+            changeOrigin: true,
+          },
+        },
+      }),
     },
   })
 

@@ -1,0 +1,436 @@
+openapi: 3.1.0
+info:
+  title: LikeC4 AI Agent API
+  description: |
+    AI Agent for LikeC4 architecture modeling with LiteLLM proxy integration
+    and an extensible skills and plugin system.
+
+    The agent backend is started automatically when the `LIKEC4_AGENT_URL`
+    environment variable is set (pointing to a LiteLLM or OpenAI-compatible proxy).
+
+    Environment variables:
+      - LIKEC4_AGENT_URL   — LiteLLM proxy base URL (required to enable the agent)
+      - LIKEC4_AGENT_KEY   — API key (optional, defaults to "no-key")
+      - LIKEC4_AGENT_MODEL — Model name (optional, defaults to "gpt-4o")
+      - LIKEC4_AGENT_PORT  — Agent server port (optional, defaults to 33336)
+  version: 1.0.0
+  license:
+    name: MIT
+
+servers:
+  - url: /agent
+    description: LikeC4 Agent endpoint (proxied by the dev server at /agent/*)
+
+paths:
+  /chat:
+    post:
+      operationId: createChatMessage
+      summary: Send a message to the AI agent
+      description: |
+        Sends a user message to the AI agent and streams back a response
+        using Server-Sent Events (SSE). The agent can use registered tools
+        (LikeC4 graph queries) and call skills autonomously.
+
+        The response stream uses the `text/event-stream` content type.
+        Each event's `data` field is a JSON-encoded `ChatStreamEvent` object.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChatRequest'
+            example:
+              message: "What are the main components of this architecture?"
+              context:
+                projectId: "default"
+                viewId: "index"
+      responses:
+        '200':
+          description: Streaming SSE response
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/ChatStreamEvent'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /sessions/{sessionId}:
+    get:
+      operationId: getSession
+      summary: Get conversation session history
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session data with message history
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteSession
+      summary: Clear a conversation session
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Session cleared successfully
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /skills:
+    get:
+      operationId: listSkills
+      summary: List available agent skills
+      description: |
+        Returns all registered skills — both built-in and plugin-provided.
+        Skills are quick-access actions that invoke the agent with a pre-built
+        prompt, optionally requiring view/element context.
+      responses:
+        '200':
+          description: List of available skills
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skills:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Skill'
+
+  /skills/{skillId}/invoke:
+    post:
+      operationId: invokeSkill
+      summary: Invoke a specific skill with context
+      description: |
+        Invokes the named skill, injecting the provided view/element context
+        into the agent prompt. Streams the response as SSE.
+      parameters:
+        - name: skillId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SkillInvokeRequest'
+      responses:
+        '200':
+          description: Streaming SSE response (same format as /chat)
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/ChatStreamEvent'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /plugins:
+    get:
+      operationId: listPlugins
+      summary: List registered plugins and their tools
+      description: |
+        Returns all registered plugins (builtin, MCP-bridged, or custom).
+        Each plugin exposes one or more tools available to the agent.
+      responses:
+        '200':
+          description: Plugin list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plugins:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Plugin'
+
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Agent server health check
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  model:
+                    type: string
+                    description: Configured model name
+
+components:
+  schemas:
+    ChatRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: User message text
+          minLength: 1
+        sessionId:
+          type: string
+          description: |
+            Session ID for conversation continuity.
+            If omitted, a new session is created and its ID is returned in the done event.
+        context:
+          $ref: '#/components/schemas/ViewContext'
+
+    ViewContext:
+      type: object
+      description: Current diagram/view context from the UI
+      properties:
+        projectId:
+          type: string
+          description: Current LikeC4 project ID
+        viewId:
+          type: string
+          description: Currently open view/diagram ID
+        selectedElementId:
+          type: string
+          description: FQN of the currently selected element (if any)
+
+    ChatStreamEvent:
+      description: |
+        A single SSE event. Each event's `data` is a JSON object with a `type` field
+        discriminating between event kinds.
+      oneOf:
+        - $ref: '#/components/schemas/TextDeltaEvent'
+        - $ref: '#/components/schemas/ToolCallEvent'
+        - $ref: '#/components/schemas/ClientToolCallEvent'
+        - $ref: '#/components/schemas/ToolResultEvent'
+        - $ref: '#/components/schemas/DoneEvent'
+        - $ref: '#/components/schemas/ErrorEvent'
+      discriminator:
+        propertyName: type
+
+    TextDeltaEvent:
+      type: object
+      required: [type, delta]
+      properties:
+        type:
+          type: string
+          enum: [text_delta]
+        sessionId:
+          type: string
+        delta:
+          type: string
+          description: Incremental text content
+
+    ToolCallEvent:
+      type: object
+      required: [type, toolName]
+      properties:
+        type:
+          type: string
+          enum: [tool_call]
+        toolName:
+          type: string
+          description: Name of the tool being called
+        toolInput:
+          type: object
+          description: Tool input arguments
+
+    ClientToolCallEvent:
+      type: object
+      required: [type, toolName]
+      description: |
+        Emitted when the agent requests a tool to be run on the client (e.g. update_view).
+        The frontend should execute the tool (e.g. call likec4rpc.updateView) and may show
+        success or error in the UI.
+      properties:
+        type:
+          type: string
+          enum: [client_tool_call]
+        toolName:
+          type: string
+          description: Name of the client tool (e.g. update_view)
+        toolInput:
+          type: object
+          description: Tool input (e.g. projectId, viewId, change for update_view)
+
+    ToolResultEvent:
+      type: object
+      required: [type, toolName]
+      properties:
+        type:
+          type: string
+          enum: [tool_result]
+        toolName:
+          type: string
+        result:
+          description: Tool execution result (truncated for large outputs)
+
+    DoneEvent:
+      type: object
+      required: [type, sessionId]
+      properties:
+        type:
+          type: string
+          enum: [done]
+        sessionId:
+          type: string
+        usage:
+          type: object
+          properties:
+            promptTokens:
+              type: integer
+            completionTokens:
+              type: integer
+
+    ErrorEvent:
+      type: object
+      required: [type, message]
+      properties:
+        type:
+          type: string
+          enum: [error]
+        message:
+          type: string
+        code:
+          type: string
+
+    Session:
+      type: object
+      required: [id, messages]
+      properties:
+        id:
+          type: string
+        messages:
+          type: array
+          items:
+            $ref: '#/components/schemas/Message'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Message:
+      type: object
+      required: [role, content]
+      properties:
+        role:
+          type: string
+          enum: [user, assistant]
+        content:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    Skill:
+      type: object
+      required: [id, title]
+      properties:
+        id:
+          type: string
+          description: Unique skill identifier (kebab-case)
+        title:
+          type: string
+          description: Display name shown in the UI
+        description:
+          type: string
+          description: Brief description of what this skill does
+        icon:
+          type: string
+          description: Tabler icon name (e.g. "IconSearch")
+        requiresContext:
+          type: array
+          description: Context fields required for this skill to be enabled
+          items:
+            type: string
+            enum: [projectId, viewId, selectedElementId]
+
+    SkillInvokeRequest:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          description: Optional session ID for conversation continuity
+        context:
+          $ref: '#/components/schemas/ViewContext'
+        params:
+          type: object
+          description: Skill-specific parameters (reserved for future use)
+
+    Plugin:
+      type: object
+      required: [id, name, source, tools]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        source:
+          type: string
+          enum: [builtin, mcp, custom]
+          description: Origin of the plugin
+        tools:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              description:
+                type: string
+
+  responses:
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error:
+                type: string
+
+    NotFound:
+      description: Not Found
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error:
+                type: string
+
+    ServiceUnavailable:
+      description: Agent not configured (LIKEC4_AGENT_URL not set)
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [error]
+            properties:
+              error:
+                type: string

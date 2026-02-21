@@ -1,5 +1,6 @@
+import { AgentPanel } from '$components/agent/AgentPanel'
 import { useMantineColorScheme } from '@mantine/core'
-import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
+import { createRootRouteWithContext, Outlet, useRouterState } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
 const asTheme = (v: unknown): 'light' | 'dark' | undefined => {
@@ -31,8 +32,23 @@ function RootComponent() {
     <>
       <Outlet />
       <ThemeSync />
+      <AgentPanelWithContext />
     </>
   )
+}
+
+function extractAgentContext(pathname: string): { projectId?: string; viewId?: string } {
+  const match = pathname.match(/\/w\/([^/]+)\/([^/]+)/)
+  if (match?.[1] && match[2]) {
+    return { projectId: match[1], viewId: match[2] }
+  }
+  return {}
+}
+
+function AgentPanelWithContext() {
+  const routerState = useRouterState()
+  const { projectId, viewId } = extractAgentContext(routerState.location.pathname)
+  return <AgentPanel projectId={projectId} viewId={viewId} />
 }
 
 const ThemeSync = () => {
