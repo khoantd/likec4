@@ -98,6 +98,28 @@ docker run --rm \
 **Note**: If your diagrams are hosted within a WSL-based filesystem (e.g. /home/user/...), then file system notifications should work as expected.
 :::
 
+### Run MCP server (e.g. on a VPS)
+
+Mount your LikeC4 workspace at `/data`, expose the MCP HTTP port, and run the server. Clients can connect to `http://<host>:33335/mcp` (Streamable HTTP).
+
+```sh copy title="Run MCP server"
+docker run -d --restart unless-stopped \
+  -v /path/to/your/likec4-workspace:/data \
+  -p 33335:33335 \
+  --name likec4-mcp \
+  likec4/likec4 \
+  mcp --http --no-watch
+```
+
+- `-d` runs the container in the background.
+- `--restart unless-stopped` restarts the container after reboot.
+- Use `--no-watch` to reduce resource usage when the workspace is static.
+- Set `LIKEC4_WORKSPACE=/data` if you override the working directory.
+
+For GitHub Container Registry use `ghcr.io/likec4/likec4` instead of `likec4/likec4`.
+
+**Deploy on a VPS:** Use the same `docker run` command above. Put your LikeC4 project on the server (e.g. clone the repo or copy files) and set `-v /path/to/your/likec4-workspace:/data`. To expose MCP over HTTPS, put a reverse proxy (e.g. Caddy or Nginx) in front of the container and proxy to `http://127.0.0.1:33335`.
+
 ### Build static website
 
 ```sh copy title="Build static website"

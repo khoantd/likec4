@@ -81,6 +81,15 @@ Always run `pnpm generate` after:
 - Include a changeset for user-facing package changes (`pnpm changeset` or `pnpm changeset:empty`).
 - PRs should include a clear description, linked issue (if any), and test results; add screenshots for UI changes.
 
+## Deployment (Vercel)
+
+The **docs** app (`apps/docs`) can be deployed to Vercel. Use the repository root as the project root; `vercel.json` is already configured:
+
+- **Build**: runs `pnpm generate` then builds the docs app and its workspace dependencies.
+- **Output**: `apps/docs/dist` (static Astro site).
+
+The **playground** app (`apps/playground`) uses Cloudflare Workers and is intended for Cloudflare Pages/Workers; deploying it to Vercel would require replacing the worker with Vercel serverless or a static-only build.
+
 ## Configuration & Tooling Notes
 
 - Pre-commit hooks use `nano-staged` to run `dprint` on staged files.

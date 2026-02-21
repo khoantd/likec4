@@ -14,6 +14,7 @@
     "node": ">=22.22.0"
   },
   "scripts": {
+    "dev": "pnpm --filter @likec4/playground dev",
     "prepare": "node .husky/install.mjs",
     "fmt": "dprint fmt",
     "changeset:empty": "changeset --empty",

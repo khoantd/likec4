@@ -36,6 +36,14 @@
       "type": "string",
       "minLength": 1
     },
+    "metadata": {
+      "description": "Arbitrary metadata as key-value pairs for custom project information",
+      "type": "object",
+      "propertyNames": {
+        "type": "string"
+      },
+      "additionalProperties": {}
+    },
     "styles": {
       "description": "Project styles customization",
       "type": "object",

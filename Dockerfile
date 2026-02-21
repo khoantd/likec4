@@ -80,5 +80,5 @@ WORKDIR /data
 ENTRYPOINT ["/usr/local/bin/likec4"]
 CMD ["-h"]
 
-# Default ports
-EXPOSE 5173 24678
+# Default ports (5173/24678 dev server, 33335 MCP HTTP)
+EXPOSE 5173 24678 33335
