@@ -1,5 +1,5 @@
 import { defineSemanticTokens } from '@pandacss/dev'
-import { mantine } from './generated.ts'
+import { mantine } from './generated'
 import { alpha } from './helpers.ts'
 
 export const colors = defineSemanticTokens.colors({

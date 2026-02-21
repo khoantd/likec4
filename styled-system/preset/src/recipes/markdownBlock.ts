@@ -1,6 +1,6 @@
 import { defineRecipe } from '@pandacss/dev'
 import { __v } from '../const.ts'
-import { mantine } from '../generated.ts'
+import { mantine } from '../generated'
 import { alpha } from '../helpers.ts'
 
 export const markdownBlock = defineRecipe({
