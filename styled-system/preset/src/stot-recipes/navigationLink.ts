@@ -1,5 +1,5 @@
 import { defineSlotRecipe } from '@pandacss/dev'
-import { mantine } from '../generated'
+import { mantine } from '../generated.ts'
 
 export const navigationLink = defineSlotRecipe({
   className: 'likec4-navlink',
