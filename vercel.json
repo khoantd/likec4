@@ -4,5 +4,11 @@
   "outputDirectory": "apps/playground/dist",
   "installCommand": "pnpm install",
   "framework": null,
-  "regions": ["iad1"]
+  "regions": ["iad1"],
+  "redirects": [
+    { "source": "/favicon.ico", "destination": "/favicon.svg", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/((?!assets/).*)", "destination": "/index.html" }
+  ]
 }

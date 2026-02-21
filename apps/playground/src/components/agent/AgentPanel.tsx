@@ -10,6 +10,7 @@ import {
   $messages,
   clearChat,
   closeAgent,
+  isAgentAvailable,
   sendMessage,
   setContext,
 } from '../../stores/agentStore'
@@ -96,7 +97,7 @@ export function AgentPanel({ projectId, viewId, selectedElementId }: AgentPanelP
         </Tooltip>
       </Box>
 
-      {!AGENT_ENABLED ?
+      {!isAgentAvailable() ?
         (
           <Box p="md" style={{ flex: 1 }}>
             <Text size="sm" c="dimmed">

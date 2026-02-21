@@ -1,0 +1,9 @@
+# LikeC4 AI Agent — Railway deployment
+# Deploy from repo root. The agent listens on PORT (set by Railway).
+
+[build]
+builder = "nixpacks"
+buildCommand = "pnpm install && pnpm generate && pnpm build"
+
+[deploy]
+startCommand = "LIKEC4_AGENT_PORT=$PORT pnpm exec likec4 serve devops/railway-agent --port 5173"

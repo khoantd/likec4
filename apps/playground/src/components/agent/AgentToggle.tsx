@@ -1,22 +1,22 @@
 import { ActionIcon, Indicator, Tooltip } from '@mantine/core'
 import { useStore } from '@nanostores/react'
 import { IconRobot } from '@tabler/icons-react'
-import { $isAgentOpen, $isStreaming, toggleAgent } from '../../stores/agentStore'
+import { $isAgentOpen, $isStreaming, isAgentAvailable, toggleAgent } from '../../stores/agentStore'
 
 export function AgentToggle() {
   const isOpen = useStore($isAgentOpen)
   const isStreaming = useStore($isStreaming)
 
-  const tooltipLabel = AGENT_ENABLED
+  const tooltipLabel = isAgentAvailable()
     ? isOpen
       ? 'Close AI Agent'
       : 'Open AI Agent'
-    : 'AI Agent (set VITE_LIKEC4_AGENT_URL to enable)'
+    : 'AI Agent (set VITE_LIKEC4_AGENT_URL to agent server URL to enable)'
 
   return (
     <Tooltip label={tooltipLabel} position="bottom" withArrow>
       <Indicator
-        disabled={!AGENT_ENABLED || !isStreaming}
+        disabled={!isAgentAvailable() || !isStreaming}
         processing
         size={8}
         color="blue"
@@ -24,7 +24,7 @@ export function AgentToggle() {
         <ActionIcon
           size="md"
           variant={isOpen ? 'filled' : 'subtle'}
-          color={AGENT_ENABLED && isOpen ? 'blue' : 'gray'}
+          color={isAgentAvailable() && isOpen ? 'blue' : 'gray'}
           onClick={toggleAgent}
           aria-label="Toggle AI Agent panel">
           <IconRobot size={16} />

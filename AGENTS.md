@@ -95,6 +95,43 @@ The **playground** app (`apps/playground`) can also be deployed to Vercel as a s
 - Vercel sets `VERCEL=1` automatically; the build skips the Cloudflare worker and outputs to `dist`.
 - Use `apps/playground/vercel.json` (output directory `dist`, SPA rewrites).
 - Backend features (share, auth, viewkv) will not work on Vercel; use Cloudflare for full functionality.
+- To enable the AI Agent on the deployed playground, deploy the agent on a separate server (see below) and set **VITE_LIKEC4_AGENT_URL** in Vercel to that agent’s base URL (must end with `/agent`).
+
+### Deploying the AI Agent on another server
+
+The playground calls the LikeC4 agent at `/chat` and `/skills`. The agent is not a serverless function; it runs as a long-lived Node server and is today only started together with `likec4 serve`. To use the agent with a Vercel-deployed (or other static) playground:
+
+1. **Host**  
+   Use a VPS or PaaS that runs Node and keeps a process open: e.g. **Railway**, **Render**, **Fly.io**, or a small VM (DigitalOcean, etc.).
+
+2. **Workspace**  
+   The agent needs a LikeC4 workspace (it uses the language server). Use any LikeC4 project, or a minimal one (e.g. a single `.likec4` file in a folder).
+
+3. **Build and run**  
+   From the monorepo root (or after installing the published `likec4` CLI):
+
+   - Set env for the **LiteLLM** (or OpenAI-compatible) backend:
+     - `LIKEC4_AGENT_URL` — e.g. `https://litellm.khoadue.me`
+     - `LIKEC4_AGENT_KEY` — API key if required
+     - `LIKEC4_AGENT_MODEL` — e.g. `gpt-4o`
+   - Optional: `LIKEC4_AGENT_PORT=33336` (default).
+   - Run: `likec4 serve <path-to-workspace> --port 5173`  
+     The agent will listen on `LIKEC4_AGENT_PORT` (33336). You only need to expose that port to the internet (you can leave 5173 internal or unused).
+
+4. **Expose the agent**  
+   Point your reverse proxy or PaaS to the agent port (33336). The server serves routes under **`/agent`** (e.g. `/agent/chat`, `/agent/skills`). So the public base URL must include `/agent`.
+
+5. **Playground env**  
+   In the playground (e.g. Vercel), set:
+   - `VITE_LIKEC4_AGENT_URL=https://<your-agent-host>/agent`  
+   Use the full base URL including `/agent` so the app calls `.../agent/chat` and `.../agent/skills`.
+
+**Example (Railway)**  
+- The repo includes **`railway.toml`** at the repo root and a minimal workspace at **`devops/railway-agent`**.
+- In Railway: new project → deploy from this repo (leave **Root Directory** empty). Build and start are in `railway.toml`; the agent listens on Railway's `PORT`.
+- Set **Variables**: `LIKEC4_AGENT_URL` (e.g. `https://litellm.khoadue.me`), `LIKEC4_AGENT_KEY` (if needed), `LIKEC4_AGENT_MODEL` (e.g. `gpt-4o`).
+- After deploy: Settings → Networking → **Generate Domain** (e.g. `https://likec4-agent-production.up.railway.app`).
+- In the playground (e.g. Vercel): `VITE_LIKEC4_AGENT_URL=https://<your-railway-domain>/agent`.
 
 ## Configuration & Tooling Notes
 

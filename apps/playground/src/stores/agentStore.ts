@@ -23,6 +23,21 @@ export interface SkillInfo {
   requiresContext?: Array<'projectId' | 'viewId' | 'selectedElementId'> | undefined
 }
 
+// --- Agent availability ---
+
+/** True when agent is configured and URL is not the same origin (avoid POST to static site). */
+export function isAgentAvailable(): boolean {
+  if (typeof AGENT_URL !== 'string' || !AGENT_URL) return false
+  try {
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    const base = AGENT_URL.replace(/\/$/, '')
+    if (base === origin || base === origin.replace(/\/$/, '')) return false
+    return true
+  } catch {
+    return false
+  }
+}
+
 // --- State atoms ---
 
 export const $isAgentOpen = atom(false)
@@ -66,7 +81,7 @@ export function setContext(ctx: AgentViewContext) {
 }
 
 async function loadSkills() {
-  if ($skillsLoaded.get()) return
+  if ($skillsLoaded.get() || !isAgentAvailable()) return
   try {
     const resp = await fetch(`${AGENT_URL}/skills`)
     if (resp.ok) {
@@ -82,6 +97,23 @@ async function loadSkills() {
 export async function sendMessage(text: string) {
   if ($isStreaming.get()) return
   if (!text.trim()) return
+  if (!isAgentAvailable()) {
+    const userMsg: ChatMessage = {
+      id: nextId(),
+      role: 'user',
+      content: text,
+      timestamp: new Date(),
+    }
+    $messages.set([...$messages.get(), userMsg])
+    const errMsg: ChatMessage = {
+      id: nextId(),
+      role: 'assistant',
+      content: 'Agent not configured. Set VITE_LIKEC4_AGENT_URL to a LikeC4 agent server (not this app URL).',
+      timestamp: new Date(),
+    }
+    $messages.set([...$messages.get(), errMsg])
+    return
+  }
 
   const userMsg: ChatMessage = {
     id: nextId(),
@@ -132,6 +164,7 @@ export async function sendMessage(text: string) {
 
 export async function invokeSkill(skillId: string) {
   if ($isStreaming.get()) return
+  if (!isAgentAvailable()) return
   $isStreaming.set(true)
 
   const assistantMsgId = nextId()
@@ -254,6 +287,6 @@ async function streamSSEResponse(body: ReadableStream<Uint8Array>, assistantMsgI
   }
 }
 
-if (AGENT_ENABLED) {
+if (isAgentAvailable()) {
   loadSkills()
 }

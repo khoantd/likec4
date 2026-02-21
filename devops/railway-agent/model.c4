@@ -1,0 +1,6 @@
+// Minimal LikeC4 workspace for the AI Agent server.
+// The agent needs a workspace to run the language server; this file is enough.
+
+model {
+  placeholder = actor 'Agent workspace' 'Minimal project for LikeC4 agent deployment'
+}
