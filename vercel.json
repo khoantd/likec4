@@ -1,7 +1,7 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "pnpm generate && pnpm turbo run build --filter=@likec4/playground...",
-  "outputDirectory": "apps/docs/dist",
+  "outputDirectory": "apps/playground/dist",
   "installCommand": "pnpm install",
   "framework": null,
   "regions": ["iad1"]
