@@ -4,6 +4,13 @@
     "NODE_ENV",
     "CLOUDFLARE_ENV"
   ],
+  "globalPassThroughEnv": [
+    "LIKEC4_AGENT_URL",
+    "LIKEC4_AGENT_KEY",
+    "LIKEC4_AGENT_MODEL",
+    "LIKEC4_AGENT_PORT",
+    "VITE_LIKEC4_AGENT_URL"
+  ],
   "globalDependencies": [
     ".tool-versions",
     "package.json",

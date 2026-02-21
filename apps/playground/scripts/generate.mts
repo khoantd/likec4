@@ -34,4 +34,23 @@ if (!existsSync('.dev.vars')) {
   )
 }
 
-await $`wrangler types`
+const buildForVercel = process.env['VERCEL'] === '1'
+if (buildForVercel) {
+  // On Vercel we only build the static frontend; skip wrangler and use a stub
+  // so generate succeeds and worker-configuration.d.ts exists for turbo outputs.
+  const workerConfigStub = `// Stub for Vercel build (worker not deployed here). Replaced by \`wrangler types\` locally.
+declare namespace Cloudflare {
+  interface Env {
+    KV: unknown
+    ASSETS?: unknown
+    OAUTH_GITHUB_ID: string
+    OAUTH_GITHUB_SECRET: string
+    SESSION_ENCRYPTION_KEY: string
+  }
+}
+interface Env extends Cloudflare.Env {}
+`
+  writeFileSync('worker-configuration.d.ts', workerConfigStub)
+} else {
+  await $`wrangler types`
+}
