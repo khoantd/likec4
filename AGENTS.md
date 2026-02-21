@@ -87,8 +87,14 @@ The **docs** app (`apps/docs`) can be deployed to Vercel. Use the repository roo
 
 - **Build**: runs `pnpm generate` then builds the docs app and its workspace dependencies.
 - **Output**: `apps/docs/dist` (static Astro site).
+- No agent or LikeC4 backend env vars are required for the docs build.
 
-The **playground** app (`apps/playground`) uses Cloudflare Workers and is intended for Cloudflare Pages/Workers; deploying it to Vercel would require replacing the worker with Vercel serverless or a static-only build.
+The **playground** app (`apps/playground`) can also be deployed to Vercel as a static SPA:
+
+- Create a separate Vercel project and set **Root Directory** to `apps/playground`.
+- Vercel sets `VERCEL=1` automatically; the build skips the Cloudflare worker and outputs to `dist`.
+- Use `apps/playground/vercel.json` (output directory `dist`, SPA rewrites).
+- Backend features (share, auth, viewkv) will not work on Vercel; use Cloudflare for full functionality.
 
 ## Configuration & Tooling Notes
 

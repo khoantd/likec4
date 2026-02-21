@@ -23,6 +23,8 @@ const alias = {
   // '@likec4/language-server': path.resolve(__dirname, '../../packages/language-server/src'),
 } satisfies AliasOptions
 
+const buildForVercel = process.env['VERCEL'] === '1'
+
 export default defineConfig(({ command }) => ({
   resolve: {
     alias,
@@ -38,15 +40,10 @@ export default defineConfig(({ command }) => ({
     jsxDev: command !== 'build',
     tsconfigRaw: readFileSync('./tsconfig.frontend.json', 'utf-8'),
   },
-  worker: {
-    format: 'es',
-  },
-  environments: {
-    client: {
-      resolve: {
-        alias,
-        conditions: ['sources'],
-      },
+  ...(buildForVercel
+    ? {
+      build: { outDir: 'dist' },
+      worker: { format: 'es' as const },
       optimizeDeps: {
         include: [
           '@likec4/icons/all',
@@ -65,70 +62,99 @@ export default defineConfig(({ command }) => ({
           'vscode-uri',
           'ufo',
         ],
-        holdUntilCrawlEnd: false,
-        esbuildOptions: {
-          plugins: [
-            {
-              // Copy-pasted from @codingame/esbuild-import-meta-url-plugin
-              // But scoped to @codingame only
-              name: 'import.meta.url',
-              setup({ onLoad }) {
-                // Help vite that bundles/move files in dev mode without touching `import.meta.url` which breaks asset urls
-                onLoad({ filter: /.*@codingame.*\.js$/, namespace: 'file' }, async (args) => {
-                  const code = await readFile(args.path, 'utf8')
-                  const assetImportMetaUrlRE =
-                    /\bnew\s+URL\s*\(\s*('[^']+'|"[^"]+"|`[^`]+`)\s*,\s*import\.meta\.url\s*(?:,\s*)?\)/g
-                  let i = 0
-                  let newCode = ''
-                  for (
-                    let match = assetImportMetaUrlRE.exec(code);
-                    match != null;
-                    match = assetImportMetaUrlRE.exec(code)
-                  ) {
-                    newCode += code.slice(i, match.index)
-                    const path = match[1]!.slice(1, -1)
-                    const resolved = resolveImportMeta(path, url.pathToFileURL(args.path).toString())
-                    newCode += `new URL(${JSON.stringify(url.fileURLToPath(resolved))}, import.meta.url)`
-                    i = assetImportMetaUrlRE.lastIndex
-                  }
-                  newCode += code.slice(i)
-                  return { contents: newCode }
-                })
-              },
-            },
-            {
-              // Strip sourceMappingURL from vscode-textmate to avoid "Could not read source map" in console
-              name: 'strip-vscode-textmate-sourcemap',
-              setup({ onLoad }) {
-                onLoad(
-                  { filter: /vscode-textmate.*[\\/]release[\\/]main\.js$/, namespace: 'file' },
-                  async (args) => {
-                    const code = await readFile(args.path, 'utf8')
-                    const stripped = code.replace(/\n?\/\/# sourceMappingURL=.*$/m, '')
-                    return { contents: stripped, loader: 'js' }
+      },
+    }
+    : {
+      worker: { format: 'es' as const },
+      environments: {
+        client: {
+          resolve: {
+            alias,
+            conditions: ['sources'],
+          },
+          optimizeDeps: {
+            include: [
+              '@likec4/icons/all',
+              '@hpcc-js/wasm-graphviz',
+              'langium/lsp',
+              'langium',
+              'vscode-languageserver/browser',
+              'vscode-languageserver-protocol',
+              'vscode-languageclient/browser',
+              'vscode-languageclient',
+              'vscode-languageserver-types',
+              'vscode-languageserver',
+              'vscode-textmate',
+              'vscode-oniguruma',
+              'vscode-jsonrpc',
+              'vscode-uri',
+              'ufo',
+            ],
+            holdUntilCrawlEnd: false,
+            esbuildOptions: {
+              plugins: [
+                {
+                  // Copy-pasted from @codingame/esbuild-import-meta-url-plugin
+                  // But scoped to @codingame only
+                  name: 'import.meta.url',
+                  setup({ onLoad }) {
+                    // Help vite that bundles/move files in dev mode without touching `import.meta.url` which breaks asset urls
+                    onLoad({ filter: /.*@codingame.*\.js$/, namespace: 'file' }, async (args) => {
+                      const code = await readFile(args.path, 'utf8')
+                      const assetImportMetaUrlRE =
+                        /\bnew\s+URL\s*\(\s*('[^']+'|"[^"]+"|`[^`]+`)\s*,\s*import\.meta\.url\s*(?:,\s*)?\)/g
+                      let i = 0
+                      let newCode = ''
+                      for (
+                        let match = assetImportMetaUrlRE.exec(code);
+                        match != null;
+                        match = assetImportMetaUrlRE.exec(code)
+                      ) {
+                        newCode += code.slice(i, match.index)
+                        const path = match[1]!.slice(1, -1)
+                        const resolved = resolveImportMeta(path, url.pathToFileURL(args.path).toString())
+                        newCode += `new URL(${JSON.stringify(url.fileURLToPath(resolved))}, import.meta.url)`
+                        i = assetImportMetaUrlRE.lastIndex
+                      }
+                      newCode += code.slice(i)
+                      return { contents: newCode }
+                    })
                   },
-                )
-              },
+                },
+                {
+                  // Strip sourceMappingURL from vscode-textmate to avoid "Could not read source map" in console
+                  name: 'strip-vscode-textmate-sourcemap',
+                  setup({ onLoad }) {
+                    onLoad(
+                      { filter: /vscode-textmate.*[\\/]release[\\/]main\.js$/, namespace: 'file' },
+                      async (args) => {
+                        const code = await readFile(args.path, 'utf8')
+                        const stripped = code.replace(/\n?\/\/# sourceMappingURL=.*$/m, '')
+                        return { contents: stripped, loader: 'js' }
+                      },
+                    )
+                  },
+                },
+              ],
             },
-          ],
+          },
+        },
+        playground: {
+          resolve: {
+            conditions: ['workerd', 'worker', 'sources'],
+          },
+          build: {
+            sourcemap: true,
+          },
+          optimizeDeps: {
+            /**
+             * @see https://github.com/likec4/likec4/pull/2416#issuecomment-3594491275
+             */
+            exclude: ['remeda'],
+          },
         },
       },
-    },
-    playground: {
-      resolve: {
-        conditions: ['workerd', 'worker', 'sources'],
-      },
-      build: {
-        sourcemap: true,
-      },
-      optimizeDeps: {
-        /**
-         * @see https://github.com/likec4/likec4/pull/2416#issuecomment-3594491275
-         */
-        exclude: ['remeda'],
-      },
-    },
-  },
+    }),
   define: {
     AGENT_ENABLED: process.env['VITE_LIKEC4_AGENT_URL'] ? 'true' : 'false',
     AGENT_URL: process.env['VITE_LIKEC4_AGENT_URL'] ? JSON.stringify(process.env['VITE_LIKEC4_AGENT_URL']) : '""',
@@ -137,13 +163,11 @@ export default defineConfig(({ command }) => ({
     tsconfigpaths({
       projects: [
         './tsconfig.frontend.json',
-        './tsconfig.worker.json',
+        ...(buildForVercel ? [] : ['./tsconfig.worker.json']),
       ],
     }),
     TanStackRouterVite(tanStackRouterViteCfg),
     react(),
-    cloudflare({
-      persistState: true,
-    }),
+    ...(buildForVercel ? [] : [cloudflare({ persistState: true })]),
   ],
 }))
