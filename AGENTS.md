@@ -95,7 +95,12 @@ The **playground** app (`apps/playground`) can also be deployed to Vercel as a s
 - Vercel sets `VERCEL=1` automatically; the build skips the Cloudflare worker and outputs to `dist`.
 - Use `apps/playground/vercel.json` (output directory `dist`, SPA rewrites).
 - Backend features (share, auth, viewkv) will not work on Vercel; use Cloudflare for full functionality.
-- To enable the AI Agent on the deployed playground, deploy the agent on a separate server (see below) and set **VITE_LIKEC4_AGENT_URL** in Vercel to that agent’s base URL (must end with `/agent`).
+- To enable the AI Agent on the deployed playground, you have two options:
+  - **Recommended (Python API)**: Point the playground directly at a running `likec4-diagram-api` service by setting:
+    - `VITE_LIKEC4_DIAGRAM_API_URL=https://your-diagram-api-host`
+    - (Optional) `VITE_LIKEC4_DIAGRAM_API_TOKEN=<bearer-or-api-token>`
+    The playground will call `POST <VITE_LIKEC4_DIAGRAM_API_URL>/api/v1/ai/generate` from the browser.
+  - **Existing Node-based Agent**: Deploy the agent on a separate server (see below) and set **VITE_LIKEC4_AGENT_URL** in Vercel to that agent’s base URL (must end with `/agent`).
 
 ### Deploying the AI Agent on another server
 
@@ -122,9 +127,10 @@ The playground calls the LikeC4 agent at `/chat` and `/skills`. The agent is not
    Point your reverse proxy or PaaS to the agent port (33336). The server serves routes under **`/agent`** (e.g. `/agent/chat`, `/agent/skills`). So the public base URL must include `/agent`.
 
 5. **Playground env**  
-   In the playground (e.g. Vercel), set:
+   In the playground (e.g. Vercel), set one of:
+   - `VITE_LIKEC4_DIAGRAM_API_URL=https://<your-diagram-api-host>` (recommended for the Python `likec4-diagram-api` backend; optional `VITE_LIKEC4_DIAGRAM_API_TOKEN` for auth), **or**
    - `VITE_LIKEC4_AGENT_URL=https://<your-agent-host>/agent`  
-   Use the full base URL including `/agent` so the app calls `.../agent/chat` and `.../agent/skills`.
+     Use the full base URL including `/agent` so the app calls `.../agent/chat` and `.../agent/skills`.
 
 **Example (Railway)**  
 - The repo includes **`railway.toml`** at the repo root and a minimal workspace at **`devops/railway-agent`**.

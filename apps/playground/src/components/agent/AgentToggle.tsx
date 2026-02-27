@@ -11,7 +11,7 @@ export function AgentToggle() {
     ? isOpen
       ? 'Close AI Agent'
       : 'Open AI Agent'
-    : 'AI Agent (set VITE_LIKEC4_AGENT_URL to agent server URL to enable)'
+    : 'AI Agent (set VITE_LIKEC4_DIAGRAM_API_URL or VITE_LIKEC4_AGENT_URL to enable)'
 
   return (
     <Tooltip label={tooltipLabel} position="bottom" withArrow>

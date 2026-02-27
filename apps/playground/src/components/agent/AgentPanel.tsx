@@ -101,8 +101,9 @@ export function AgentPanel({ projectId, viewId, selectedElementId }: AgentPanelP
         (
           <Box p="md" style={{ flex: 1 }}>
             <Text size="sm" c="dimmed">
-              To enable the AI Agent, set VITE_LIKEC4_AGENT_URL when starting the dev server (e.g.{' '}
-              <code>VITE_LIKEC4_AGENT_URL=http://localhost:33336 pnpm dev</code>) or in your .env file.
+              To enable the AI Agent, set <code>VITE_LIKEC4_DIAGRAM_API_URL</code> to a running{' '}
+              <code>likec4-diagram-api</code> service (recommended), or set <code>VITE_LIKEC4_AGENT_URL</code>{' '}
+              to a LikeC4 agent server (must expose <code>/agent/chat</code>).
             </Text>
           </Box>
         ) :

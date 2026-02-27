@@ -156,7 +156,24 @@ export default defineConfig(({ command }) => ({
       },
     }),
   define: {
-    AGENT_ENABLED: process.env['VITE_LIKEC4_AGENT_URL'] ? 'true' : 'false',
+    // AI backend selection:
+    // - If VITE_LIKEC4_DIAGRAM_API_URL is set, the playground Agent talks directly to likec4-diagram-api.
+    // - Otherwise, if VITE_LIKEC4_AGENT_URL is set, it talks to the Node-based LikeC4 Agent.
+    // - If neither is set, the Agent UI is disabled.
+    AI_BACKEND: process.env['VITE_LIKEC4_DIAGRAM_API_URL']
+      ? JSON.stringify('diagram-api')
+      : process.env['VITE_LIKEC4_AGENT_URL']
+      ? JSON.stringify('node-agent')
+      : JSON.stringify('none'),
+    DIAGRAM_API_URL: process.env['VITE_LIKEC4_DIAGRAM_API_URL']
+      ? JSON.stringify(process.env['VITE_LIKEC4_DIAGRAM_API_URL'])
+      : '""',
+    DIAGRAM_API_TOKEN: process.env['VITE_LIKEC4_DIAGRAM_API_TOKEN']
+      ? JSON.stringify(process.env['VITE_LIKEC4_DIAGRAM_API_TOKEN'])
+      : '""',
+    AGENT_ENABLED: process.env['VITE_LIKEC4_DIAGRAM_API_URL'] || process.env['VITE_LIKEC4_AGENT_URL']
+      ? 'true'
+      : 'false',
     AGENT_URL: process.env['VITE_LIKEC4_AGENT_URL'] ? JSON.stringify(process.env['VITE_LIKEC4_AGENT_URL']) : '""',
   },
   plugins: [

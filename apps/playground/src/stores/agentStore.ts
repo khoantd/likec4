@@ -26,16 +26,30 @@ export interface SkillInfo {
 // --- Agent availability ---
 
 /** True when agent is configured and URL is not the same origin (avoid POST to static site). */
+type AgentBackend = 'diagram-api' | 'node-agent' | 'none'
+
+function getBackend(): AgentBackend {
+  // AI_BACKEND is injected by Vite define in vite.config.ts
+  return (AI_BACKEND ?? 'none') as AgentBackend
+}
+
 export function isAgentAvailable(): boolean {
-  if (typeof AGENT_URL !== 'string' || !AGENT_URL) return false
-  try {
-    const origin = typeof window !== 'undefined' ? window.location.origin : ''
-    const base = AGENT_URL.replace(/\/$/, '')
-    if (base === origin || base === origin.replace(/\/$/, '')) return false
-    return true
-  } catch {
-    return false
+  const backend = getBackend()
+  if (backend === 'diagram-api') {
+    return typeof DIAGRAM_API_URL === 'string' && DIAGRAM_API_URL.length > 0
   }
+  if (backend === 'node-agent') {
+    if (typeof AGENT_URL !== 'string' || !AGENT_URL) return false
+    try {
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      const base = AGENT_URL.replace(/\/$/, '')
+      if (base === origin || base === origin.replace(/\/$/, '')) return false
+      return true
+    } catch {
+      return false
+    }
+  }
+  return false
 }
 
 // --- State atoms ---
@@ -82,6 +96,12 @@ export function setContext(ctx: AgentViewContext) {
 
 async function loadSkills() {
   if ($skillsLoaded.get() || !isAgentAvailable()) return
+  if (getBackend() !== 'node-agent') {
+    // Diagram API backend has no skills endpoint; mark as loaded with empty list
+    $skills.set([])
+    $skillsLoaded.set(true)
+    return
+  }
   try {
     const resp = await fetch(`${AGENT_URL}/skills`)
     if (resp.ok) {
@@ -105,10 +125,14 @@ export async function sendMessage(text: string) {
       timestamp: new Date(),
     }
     $messages.set([...$messages.get(), userMsg])
+    const backend = getBackend()
+    const help = backend === 'diagram-api'
+      ? 'Set VITE_LIKEC4_DIAGRAM_API_URL to a likec4-diagram-api server (not this app URL).'
+      : 'Set VITE_LIKEC4_AGENT_URL to a LikeC4 agent server (not this app URL).'
     const errMsg: ChatMessage = {
       id: nextId(),
       role: 'assistant',
-      content: 'Agent not configured. Set VITE_LIKEC4_AGENT_URL to a LikeC4 agent server (not this app URL).',
+      content: `Agent not configured. ${help}`,
       timestamp: new Date(),
     }
     $messages.set([...$messages.get(), errMsg])
@@ -135,9 +159,79 @@ export async function sendMessage(text: string) {
   $messages.set([...$messages.get(), assistantMsg])
 
   try {
+    const backend = getBackend()
     const currentSessionId = $sessionId.get()
     const context = $agentContext.get()
 
+    if (backend === 'diagram-api') {
+      if (!DIAGRAM_API_URL) {
+        updateLastMessage(assistantMsgId, {
+          content: 'Error: VITE_LIKEC4_DIAGRAM_API_URL is not set.',
+        })
+        return
+      }
+
+      const promptParts: string[] = []
+      const trimmed = text.trim()
+      if (trimmed) {
+        promptParts.push(trimmed)
+      }
+      if (context.projectId || context.viewId || context.selectedElementId) {
+        const ctxSummary = [
+          context.projectId ? `projectId=${context.projectId}` : null,
+          context.viewId ? `viewId=${context.viewId}` : null,
+          context.selectedElementId ? `selectedElementId=${context.selectedElementId}` : null,
+        ]
+          .filter(Boolean)
+          .join(', ')
+        promptParts.push(`\n\nContext: ${ctxSummary}`)
+      }
+
+      const response = await fetch(`${DIAGRAM_API_URL.replace(/\/$/, '')}/api/v1/ai/generate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(DIAGRAM_API_TOKEN ? { Authorization: `Bearer ${DIAGRAM_API_TOKEN}` } : {}),
+        },
+        body: JSON.stringify({ prompt: promptParts.join('') }),
+      })
+
+      if (!response.ok) {
+        updateLastMessage(assistantMsgId, { content: `Error: ${response.statusText}` })
+        return
+      }
+
+      type DiagramApiResponse = {
+        likec4_dsl: string
+        explanation?: string | null
+      }
+
+      const data = (await response.json()) as DiagramApiResponse
+      const explanation = data.explanation?.trim()
+      const dsl = data.likec4_dsl?.trim()
+
+      let content = ''
+      if (explanation) {
+        content += explanation
+      }
+      if (dsl) {
+        if (content) content += '\n\n'
+        content += 'Suggested LikeC4 DSL:\n```likec4\n'
+        content += dsl
+        content += '\n```'
+      }
+      if (!content) {
+        content = 'No LikeC4 DSL was generated.'
+      }
+
+      updateLastMessage(assistantMsgId, {
+        content,
+        toolCalls: [],
+      })
+      return
+    }
+
+    // Fallback: Node-based LikeC4 Agent (existing behaviour)
     const response = await fetch(`${AGENT_URL}/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -165,6 +259,10 @@ export async function sendMessage(text: string) {
 export async function invokeSkill(skillId: string) {
   if ($isStreaming.get()) return
   if (!isAgentAvailable()) return
+  if (getBackend() !== 'node-agent') {
+    // No skills when using the diagram-api backend
+    return
+  }
   $isStreaming.set(true)
 
   const assistantMsgId = nextId()
