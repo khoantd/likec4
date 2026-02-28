@@ -31,7 +31,7 @@ export function AgentPanel({ projectId, viewId, selectedElementId }: AgentPanelP
   const hasMessages = useStore($hasMessages)
 
   useEffect(() => {
-    setContext({ projectId, viewId, selectedElementId })
+    setContext({ ...$agentContext.get(), projectId, viewId, selectedElementId })
   }, [projectId, viewId, selectedElementId])
 
   return (
