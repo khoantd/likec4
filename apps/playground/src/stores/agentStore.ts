@@ -13,6 +13,7 @@ export interface AgentViewContext {
   projectId?: string | undefined
   viewId?: string | undefined
   selectedElementId?: string | undefined
+  currentDsl?: string | undefined
 }
 
 export interface SkillInfo {
@@ -193,7 +194,11 @@ export async function sendMessage(text: string) {
           'Content-Type': 'application/json',
           ...(DIAGRAM_API_TOKEN ? { Authorization: `Bearer ${DIAGRAM_API_TOKEN}` } : {}),
         },
-        body: JSON.stringify({ prompt: promptParts.join('') }),
+        body: JSON.stringify({
+          prompt: promptParts.join(''),
+          ...(context.currentDsl ? { current_dsl: context.currentDsl } : {}),
+          ...(context.viewId ? { view_id: context.viewId } : {}),
+        }),
       })
 
       if (!response.ok) {

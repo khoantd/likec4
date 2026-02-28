@@ -1,4 +1,5 @@
 import { MonacoEditor } from '$/monaco'
+import { AgentPanel } from '$components/agent/AgentPanel'
 import { Header } from '$components/appshell/Header'
 import {
   type LayoutedModelApi,
@@ -6,13 +7,15 @@ import {
   useDrawioContextMenu,
 } from '$components/drawio/DrawioContextMenuProvider'
 import { WorkspaceFileTabs } from '$components/workspace/WorkspaceFileTabs'
+import { usePlaygroundContext } from '$hooks/usePlayground'
 import { PlaygroundActorContextProvider } from '$state/context'
 import { WorkspacePersistence, WorkspaceSessionPersistence } from '$state/persistence'
+import { setContext } from '$stores/agentStore'
 import { css } from '@likec4/styles/css'
 import { AppShell, AppShellHeader, AppShellMain, Box, Stack } from '@mantine/core'
 import { useMediaQuery } from '@mantine/hooks'
 import { createFileRoute, Outlet } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Group, Panel, Separator, useDefaultLayout } from 'react-resizable-panels'
 import * as styles from '../styles.css'
 
@@ -93,8 +96,29 @@ function WorkspaceContextPage() {
           </AppShellMain>
         </AppShell>
       </DrawioContextMenuProvider>
+      <AgentContextSync workspaceId={workspace.workspaceId} />
     </PlaygroundActorContextProvider>
   )
+}
+
+/**
+ * Lives inside PlaygroundActorContextProvider so it can read workspace files and
+ * active view, then sync them into the agent store before each message is sent.
+ */
+function AgentContextSync({ workspaceId }: { workspaceId: string }) {
+  const files = usePlaygroundContext(ctx => ctx.files)
+  const activeViewId = usePlaygroundContext(ctx => ctx.activeViewId)
+
+  useEffect(() => {
+    const currentDsl = Object.values(files).join('\n\n')
+    setContext({
+      projectId: workspaceId,
+      viewId: activeViewId ?? undefined,
+      currentDsl: currentDsl || undefined,
+    })
+  }, [workspaceId, files, activeViewId])
+
+  return <AgentPanel projectId={workspaceId} viewId={activeViewId ?? undefined} />
 }
 
 function EditorPanelWithDrawioMenu({
