@@ -4,6 +4,7 @@ import { logger as mainLogger } from '../logger'
 import type { AgentConfig, AgentTool, ChatMessage, ChatStreamEvent, Session, ViewContext } from './types'
 
 const UPDATE_VIEW_CLIENT_TOOL = 'update_view'
+const APPLY_FILE_EDIT_CLIENT_TOOL = 'apply_file_edit'
 
 const logger = mainLogger.getChild('agent')
 
@@ -255,6 +256,30 @@ function createLikeC4Tools(languageServices: LikeC4LanguageServices): AgentTool[
         }
       },
     },
+    // Client-only tool: apply DSL edits to a specific source file
+    {
+      name: APPLY_FILE_EDIT_CLIENT_TOOL,
+      description:
+        'Apply a DSL edit to a specific source file in the user\'s editor. Use this to create or update a LikeC4 source file with new or modified DSL content. Requires the filename and the full new content of the file.',
+      parameters: {
+        type: 'object',
+        properties: {
+          filename: {
+            type: 'string',
+            description: 'The target filename (e.g. "model.c4" or "views.c4")',
+          },
+          content: {
+            type: 'string',
+            description: 'The full new content of the file (LikeC4 DSL)',
+          },
+        },
+        required: ['filename', 'content'],
+      },
+      async execute() {
+        // Not executed on server; client handles via client_tool_call
+        return { clientOnly: true }
+      },
+    },
     // Client-only tool: forwarded to the frontend to apply via likec4rpc.updateView
     {
       name: UPDATE_VIEW_CLIENT_TOOL,
@@ -388,8 +413,18 @@ export class AgentHandler {
       ? `\n\nCurrent context:\n${contextParts.map(p => `- ${p}`).join('\n')}`
       : ''
 
+    let filesSection = ''
+    if (context.files && Object.keys(context.files).length > 0) {
+      const fileBlocks = Object.entries(context.files)
+        .map(([filename, content]) => `### ${filename}\n\`\`\`likec4\n${content}\n\`\`\``)
+        .join('\n\n')
+      filesSection = `\n\nCurrent source files:\n${fileBlocks}`
+    } else if (context.currentDsl) {
+      filesSection = `\n\nCurrent DSL:\n\`\`\`likec4\n${context.currentDsl}\n\`\`\``
+    }
+
     if (this.config.systemPrompt) {
-      return this.config.systemPrompt + contextSection
+      return this.config.systemPrompt + contextSection + filesSection
     }
 
     return `You are an AI assistant integrated into LikeC4, an architecture-as-code tool.
@@ -403,12 +438,14 @@ You have access to tools for querying the LikeC4 model:
 - get_view: Get details of a specific diagram view
 - find_relationships: Find relationships between two elements
 - update_view: Apply a change to the diagram (element styles, reset layout, auto-layout direction). Use when the user asks to change colors, shapes, or layout. Requires projectId and viewId from context.
+- apply_file_edit: Apply DSL edits to a specific source file. Use this when the user asks to modify, add, or rewrite source files.
 
 Guidelines:
 - Always use tools to get accurate data before answering
 - When referring to elements, use their FQN (fully qualified name)
 - Be concise and technical in your responses
-- Suggest relevant next steps or related elements when helpful${contextSection}`
+- Suggest relevant next steps or related elements when helpful
+- When editing DSL, use apply_file_edit with the exact filename shown in the source files section${contextSection}${filesSection}`
   }
 
   private buildMessages(session: Session, context: ViewContext): ChatCompletionMessageParam[] {
@@ -531,10 +568,10 @@ Guidelines:
             yield { type: 'tool_call', toolName: tc.name, toolInput: toolArgs }
 
             let toolResult: unknown
-            if (tc.name === UPDATE_VIEW_CLIENT_TOOL) {
+            if (tc.name === UPDATE_VIEW_CLIENT_TOOL || tc.name === APPLY_FILE_EDIT_CLIENT_TOOL) {
               // Forward to client; do not execute on server
               yield { type: 'client_tool_call', toolName: tc.name, toolInput: toolArgs }
-              toolResult = { success: true, message: 'Change sent to the diagram editor.' }
+              toolResult = { success: true, message: 'Change sent to the editor.' }
             } else if (!tool) {
               toolResult = { error: `Unknown tool: ${tc.name}` }
             } else {

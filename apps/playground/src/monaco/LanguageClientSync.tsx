@@ -250,7 +250,7 @@ export function LanguageClientSync({
           languageClient().onNotification(DidChangeModelNotification.type, () => {
             try {
               const errors: string[] = []
-              languageClient().diagnostics?.forEach((uri, diagnostics) => {
+              languageClient().diagnostics?.forEach((_uri, diagnostics) => {
                 for (const diagnostic of diagnostics) {
                   if (diagnostic.severity === 0) {
                     errors.push(
@@ -379,6 +379,21 @@ export function LanguageClientSync({
       }),
       playground.actor.on('workspace.request-layouted-data', async () => {
         await requestLayoutedData()
+      }),
+      playground.actor.on('workspace.updateFile', async ({ filename, content }) => {
+        try {
+          const model = ensureFileInWorkspace(config.fsProvider, filename, content)
+          // If the updated file is active, switch the editor to it
+          if (filename === playground.getContext().activeFilename) {
+            wrapper.getEditor()?.setModel(model)
+          }
+          const ctx = playground.getContext()
+          const docs = Object.keys(ctx.files).map(f => monaco.Uri.file(f).toString())
+          await languageClient().sendRequest(BuildDocuments.req, { docs })
+          await requestComputedModel()
+        } catch (err) {
+          logger.error(loggable(err))
+        }
       }),
     ]
     return () => listeners.forEach(l => l.unsubscribe())

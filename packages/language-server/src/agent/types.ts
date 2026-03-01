@@ -13,6 +13,8 @@ export interface ViewContext {
   projectId?: string | undefined
   viewId?: string | undefined
   selectedElementId?: string | undefined
+  currentDsl?: string | undefined
+  files?: Record<string, string> | undefined
 }
 
 export interface ChatMessage {

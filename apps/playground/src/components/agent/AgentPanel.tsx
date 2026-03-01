@@ -1,7 +1,8 @@
+import { usePlayground, usePlaygroundContext } from '$hooks/usePlayground'
 import { ActionIcon, Box, Drawer, Group, Text, Tooltip } from '@mantine/core'
 import { useStore } from '@nanostores/react'
 import { IconRobot, IconTrash, IconX } from '@tabler/icons-react'
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import {
   $agentContext,
   $hasMessages,
@@ -11,6 +12,7 @@ import {
   clearChat,
   closeAgent,
   isAgentAvailable,
+  registerUpdateFileCallback,
   sendMessage,
   setContext,
 } from '../../stores/agentStore'
@@ -29,10 +31,24 @@ export function AgentPanel({ projectId, viewId, selectedElementId }: AgentPanelP
   const messages = useStore($messages)
   const isStreaming = useStore($isStreaming)
   const hasMessages = useStore($hasMessages)
+  const playground = usePlayground()
+  const activeFilename = usePlaygroundContext(ctx => ctx.activeFilename)
 
   useEffect(() => {
     setContext({ ...$agentContext.get(), projectId, viewId, selectedElementId })
   }, [projectId, viewId, selectedElementId])
+
+  // Register callback so node-agent's apply_file_edit client tool can update the editor
+  useEffect(() => {
+    return registerUpdateFileCallback((filename, content) => {
+      playground.send({ type: 'workspace.updateFile', filename, content })
+    })
+  }, [playground])
+
+  // Apply button handler for diagram-api responses (uses active file as target)
+  const onApply = useCallback((content: string) => {
+    playground.send({ type: 'workspace.updateFile', filename: activeFilename, content })
+  }, [playground, activeFilename])
 
   return (
     <Drawer
@@ -110,7 +126,7 @@ export function AgentPanel({ projectId, viewId, selectedElementId }: AgentPanelP
         (
           <>
             <SkillPicker />
-            <ChatMessages messages={messages} isStreaming={isStreaming} />
+            <ChatMessages messages={messages} isStreaming={isStreaming} onApply={onApply} />
             <ChatInput onSend={sendMessage} isStreaming={isStreaming} />
           </>
         )}

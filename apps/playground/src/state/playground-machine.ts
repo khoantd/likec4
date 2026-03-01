@@ -117,6 +117,7 @@ export type PlaygroundEvents =
   | { type: 'workspace.changeActiveView'; viewId: ViewId }
   | { type: 'workspace.changeActiveFile'; filename: string }
   | { type: 'workspace.addFile'; filename: string; content: string }
+  | { type: 'workspace.updateFile'; filename: string; content: string }
   | { type: 'workspace.switch'; workspace: PlaygroundInput }
   | { type: 'workspace.share'; options: ShareOptions }
   | { type: 'workspace.persist' }
@@ -126,6 +127,7 @@ export type PlaygroundEmitted =
   | { type: 'workspace.request-layouted-data' }
   | { type: 'workspace.openSources'; target: LocateRequest.Params }
   | { type: 'workspace.applyViewChanges'; viewId: ViewId; change: ViewChange }
+  | { type: 'workspace.updateFile'; filename: string; content: string }
 
 const logger = rootLogger.getChild('playground-actor')
 
@@ -405,6 +407,30 @@ export const playgroundMachine = setup({
               }),
               activeFilename: ({ event }) => event.filename,
             }),
+          ],
+        },
+        'workspace.updateFile': {
+          actions: [
+            assign(({ event, context }) => {
+              const isNew = !(event.filename in context.files)
+              return {
+                files: {
+                  ...context.files,
+                  [event.filename]: event.content,
+                },
+                originalFiles: {
+                  ...context.originalFiles,
+                  [event.filename]: event.content,
+                },
+                ...(isNew ? { activeFilename: event.filename } : {}),
+              }
+            }),
+            emit(({ event }) => ({
+              type: 'workspace.updateFile' as const,
+              filename: event.filename,
+              content: event.content,
+            })),
+            'persist to storage',
           ],
         },
         'workspace.applyViewChanges': {

@@ -115,6 +115,7 @@ function AgentContextSync({ workspaceId }: { workspaceId: string }) {
       projectId: workspaceId,
       viewId: activeViewId ?? undefined,
       currentDsl: currentDsl || undefined,
+      files: Object.keys(files).length > 0 ? { ...files } : undefined,
     })
   }, [workspaceId, files, activeViewId])
 

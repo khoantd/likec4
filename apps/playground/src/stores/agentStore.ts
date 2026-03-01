@@ -14,6 +14,7 @@ export interface AgentViewContext {
   viewId?: string | undefined
   selectedElementId?: string | undefined
   currentDsl?: string | undefined
+  files?: Record<string, string> | undefined
 }
 
 export interface SkillInfo {
@@ -66,6 +67,17 @@ export const $skillsLoaded = atom(false)
 // --- Computed ---
 
 export const $hasMessages = computed($messages, msgs => msgs.length > 0)
+
+// --- Update file callback (set by AgentPanel, which has playground actor access) ---
+
+let _updateFileCallback: ((filename: string, content: string) => void) | null = null
+
+export function registerUpdateFileCallback(cb: (filename: string, content: string) => void): () => void {
+  _updateFileCallback = cb
+  return () => {
+    if (_updateFileCallback === cb) _updateFileCallback = null
+  }
+}
 
 // --- Actions ---
 
@@ -197,6 +209,7 @@ export async function sendMessage(text: string) {
         body: JSON.stringify({
           prompt: promptParts.join(''),
           ...(context.currentDsl ? { current_dsl: context.currentDsl } : {}),
+          ...(context.files ? { files: context.files } : {}),
           ...(context.viewId ? { view_id: context.viewId } : {}),
         }),
       })
@@ -362,9 +375,15 @@ async function streamSSEResponse(body: ReadableStream<Uint8Array>, assistantMsgI
               }
               break
             }
-            case 'client_tool_call':
-              // Playground has no likec4rpc; diagram edits from agent are not applied
+            case 'client_tool_call': {
+              if (event.toolName === 'apply_file_edit' && _updateFileCallback) {
+                const input = event.toolInput as { filename?: string; content?: string } | undefined
+                if (input?.filename && input.content !== undefined) {
+                  _updateFileCallback(input.filename, input.content)
+                }
+              }
               break
+            }
             case 'done': {
               if (event.sessionId) {
                 $sessionId.set(event.sessionId)
